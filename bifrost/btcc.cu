@@ -49,6 +49,8 @@
 
 #include "libtcc/Correlator.h"
 
+#define DCP_DEBUG
+
 thread_local cudaStream_t g_cuda_stream = cudaStreamPerThread;
 
 //
@@ -288,8 +290,19 @@ public:
         }
         
 #undef LAUNCH_SWIZZEL_KERNEL
-        
+        cudaEvent_t start, stop;
+        cudaEventCreate(&start);
+        cudaEventCreate(&stop);
+        cudaEventRecord(start);
+        // Launch the main TCC kernel
         (*_tcc).launchAsync((CUstream) _stream, (CUdeviceptr) out->data, (CUdeviceptr) _reordered);
+        cudaEventRecord(stop);
+        cudaEventSynchronize(stop);
+        float milliseconds = 0;
+        cudaEventElapsedTime(&milliseconds, start, stop);
+        #ifdef DCP_DEBUG   
+        // std::cout << "Kernel time (ms): " << milliseconds << std::endl;
+        #endif
         BF_CHECK_CUDA_EXCEPTION(cudaGetLastError(), BF_STATUS_INTERNAL_ERROR);
         
 #define LAUNCH_ACCUMULATE_KERNEL(DType) \

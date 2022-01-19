@@ -44,7 +44,6 @@ BIFROST_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Makefile template
 _MAKEFILE_TEMPLATE = r"""
-include {bifrost_config}/config.mk {bifrost_config}/user.mk
 
 ifndef NOCUDA
 # All CUDA archs supported by this version of nvcc
@@ -238,7 +237,7 @@ def build(filename):
     
     if not os.path.exists(filename):
         raise OSError("File '%s' does not exist" % filename)
-    status = os.system("make -f %s all" % filename)
+    status = os.system("make --dry-run -f %s all" % filename)
     return True if status == 0 else False
 
 
